@@ -1,0 +1,21 @@
+# companion_diagnoser — per-sub-agent model + prompt config (ADR-205 WS-2).
+#
+# AGENT-DRIVEN tiering: this YAML is the single source of truth for the
+# diagnoser's model. The agent sends primary_model as the gateway's
+# logical_model_id and fallback_models as the agent-declared fallback chain
+# (InvokeRequest.fallback_logical_model_ids); the gateway HONOURS it.
+#
+# The diagnoser reasons over the extractor's PLAIN-TEXT output plus a fenced
+# UNTRUSTED LEARNER CLUES data block and emits a STRICT-JSON Growth-Edge map
+# matching the FROZEN analysis.py _JSON_CONTRACT. That reasoning + schema-
+# faithfulness wants the HIGH tier — primary gemini-2.5-pro, fallback
+# gemini-2.5-flash. prompt_version selects the instruction template (WS-3 will
+# resolve it against the ADR-197 prompt registry; today it labels the
+# embedded default in internal/agent/instructions.go).
+agent: companion_diagnoser
+sub_agents:
+  diagnoser:
+    tier: high
+    primary_model: gemini-2.5-pro
+    fallback_models: [gemini-2.5-flash]
+    prompt_version: v1

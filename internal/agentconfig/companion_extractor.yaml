@@ -1,0 +1,21 @@
+# companion_extractor — per-sub-agent model + prompt config (ADR-205 WS-2).
+#
+# AGENT-DRIVEN tiering: this YAML is the single source of truth for the
+# extractor's model. The agent sends primary_model as the gateway's
+# logical_model_id and fallback_models as the agent-declared fallback chain
+# (InvokeRequest.fallback_logical_model_ids); the gateway HONOURS it.
+#
+# The extractor faithfully TRANSCRIBES / DESCRIBES an uploaded learning artifact
+# (a marked test, free-form notes, a hand-drawn scribble, or source material)
+# into plain text for the diagnoser. That demands a strong MULTIMODAL reader, so
+# the primary is the GA multimodal flagship gemini-2.5-pro with a gemini-2.5-flash
+# fallback (both multimodal). prompt_version selects the instruction template
+# (WS-3 will resolve it against the ADR-197 prompt registry; today it labels
+# the embedded default in internal/agent/instructions.go).
+agent: companion_extractor
+sub_agents:
+  extractor:
+    tier: high
+    primary_model: gemini-2.5-pro
+    fallback_models: [gemini-2.5-flash]
+    prompt_version: v1
