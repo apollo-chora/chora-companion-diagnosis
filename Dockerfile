@@ -21,6 +21,7 @@ ARG BUILD_TIME=unknown
 ############################
 FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
 
+ARG TARGETARCH
 ARG CREW_NAME
 ARG GIT_SHA
 ARG BUILD_TIME
@@ -35,7 +36,7 @@ RUN go mod download
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64
+    GOARCH=${TARGETARCH}
 RUN go build -trimpath -ldflags "-s -w" -o /out/companion_extractor ./cmd/companion_extractor \
  && go build -trimpath -ldflags "-s -w" -o /out/companion_diagnoser ./cmd/companion_diagnoser
 
