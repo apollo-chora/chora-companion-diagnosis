@@ -3,11 +3,11 @@
 // weakness_extractor (faithful artifact transcription) and weakness_diagnoser
 // (structured Growth-Edge map) — read their system prompts from here.
 //
-// The instructions are exported as Go strings (base prompt) + Compose* helpers
-// (base prompt + runtime session-state data) so they are unit-testable WITHOUT
-// booting the ADK runtime, and so WS-3 can later swap the embedded default for
-// the ADR-197 registered + locked prompt via the same overrideOr seam the qgen
-// crews use. Nothing here touches gRPC / the event bus / the object store.
+// The instructions are exposed as Compose* helpers (base prompt + runtime
+// session-state data) so they are unit-testable WITHOUT booting the ADK
+// runtime, and so WS-3 can later swap the embedded default for the ADR-197
+// registered + locked prompt via the same overrideOr seam the qgen crews use.
+// Nothing here touches gRPC / the event bus / the object store.
 //
 // The diagnoser's output contract is the FROZEN analysis.py _JSON_CONTRACT
 // (services/chora-ai-kernel-orchestrator/src/chora_ai_kernel_orchestrator/
@@ -41,11 +41,6 @@ Transcribe by artifact kind:
   - source_material: summarise the SCOPE and structure (topics, sections, coverage) so the diagnoser knows what was studied.
 
 Output PLAIN TEXT only — no JSON, no markdown fences, no commentary about the learner as a person. Transcribe / describe ONLY what is actually present; never fabricate content. Mark any unreadable span "[illegible]".`
-
-// ExtractorInstruction returns the LOCKED base system prompt for
-// weakness_extractor (no runtime data). Exported for unit tests + the WS-3
-// registered-prompt swap.
-func ExtractorInstruction() string { return extractorSystemPrompt }
 
 // ComposeExtractorInstruction folds the runtime artifact reference — read from
 // ADK session state by the boot wiring (source_mime_type + a one-line source
@@ -101,10 +96,6 @@ Each concept becomes ONE positive "Growth Edge" — the next thing to grow, neve
 
 	diagnoserJSONContract,
 }, "\n\n")
-
-// DiagnoserInstruction returns the LOCKED base diagnoser system prompt (no
-// runtime data). Exported for unit tests + the WS-3 registered-prompt swap.
-func DiagnoserInstruction() string { return diagnoserSystemPrompt }
 
 // ComposeDiagnoserInstruction folds the runtime data — the extractor's
 // PLAIN-TEXT output (extractedText) and the pre-rendered, already-fenced
