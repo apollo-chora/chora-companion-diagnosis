@@ -42,22 +42,25 @@ func TestLoadConfig_readsTheEmbeddedYAMLAndTheCompanionOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d.CrewKind != "companion_diagnoser" || d.Model != "gemini-2.5-pro" || len(d.FallbackModels) != 1 || d.PromptVersion != "v1" {
+	if d.CrewKind != "companion_diagnoser" || d.Model != "longcat-2.5-preview" ||
+		len(d.FallbackModels) != 1 || d.FallbackModels[0] != "longcat-2.5-preview" || d.PromptVersion != "v1" {
 		t.Errorf("diagnoser config = %+v", d)
 	}
-	t.Setenv("COMPANION_EXTRACTOR_MODEL", "gemini-2.5-flash")
+	// The env override must win over the YAML default, so it uses a value the
+	// YAML never declares.
+	t.Setenv("COMPANION_EXTRACTOR_MODEL", "test-model-override")
 	e, err := LoadExtractorConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e.CrewKind != "companion_extractor" || e.Model != "gemini-2.5-flash" {
+	if e.CrewKind != "companion_extractor" || e.Model != "test-model-override" {
 		t.Errorf("extractor override not honoured: %+v", e)
 	}
 	// The old WEAKNESS_* override names are DELETED (ADR-254 D9), not aliased.
 	t.Setenv("COMPANION_EXTRACTOR_MODEL", "")
-	t.Setenv("WEAKNESS_EXTRACTOR_MODEL", "gemini-ignored")
+	t.Setenv("WEAKNESS_EXTRACTOR_MODEL", "test-model-ignored")
 	e, _ = LoadExtractorConfig()
-	if e.Model != "gemini-2.5-pro" {
+	if e.Model != "longcat-2.5-preview" {
 		t.Errorf("WEAKNESS_EXTRACTOR_MODEL must be dead, got model %q", e.Model)
 	}
 }
@@ -261,11 +264,11 @@ func TestDiagnoserConditions_carryTaskKind(t *testing.T) {
 func TestNewGatewayLLM_refusesAnIncompleteConfigAndNamesTheBinary(t *testing.T) {
 	// modelgatewayclient validates before minting a token, so no credentials
 	// are needed; the wrap must name the binary, model and endpoint.
-	_, err := NewGatewayLLM(context.Background(), Config{CrewKind: CrewKindExtractor, GatewayEndpoint: "gateway.chora.site:443", Model: "gemini-2.5-pro"})
+	_, err := NewGatewayLLM(context.Background(), Config{CrewKind: CrewKindExtractor, GatewayEndpoint: "gateway.chora.site:443", Model: "longcat-2.5-preview"})
 	if err == nil {
 		t.Fatal("NewGatewayLLM built a client with no tenant and no GCID")
 	}
-	for _, want := range []string{"modelgatewayclient.New", CrewKindExtractor, "gemini-2.5-pro", "gateway.chora.site:443"} {
+	for _, want := range []string{"modelgatewayclient.New", CrewKindExtractor, "longcat-2.5-preview", "gateway.chora.site:443"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q missing %q", err, want)
 		}

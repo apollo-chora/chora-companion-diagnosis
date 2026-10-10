@@ -7,15 +7,17 @@
 #
 # The extractor faithfully TRANSCRIBES / DESCRIBES an uploaded learning artifact
 # (a marked test, free-form notes, a hand-drawn scribble, or source material)
-# into plain text for the diagnoser. That demands a strong MULTIMODAL reader, so
-# the primary is the GA multimodal flagship gemini-2.5-pro with a gemini-2.5-flash
-# fallback (both multimodal). prompt_version selects the instruction template
-# (WS-3 will resolve it against the ADR-197 prompt registry; today it labels
-# the embedded default in internal/agent/instructions.go).
+# into plain text for the diagnoser. That demands a strong MULTIMODAL reader:
+# longcat-2.5-preview (LongCat-2.5-Preview via chora-model-gateway) is the
+# platform's single text route and declares vision, so it is both the primary
+# and the only fallback — the old HIGH/CHEAP tiering collapses to this one model.
+# prompt_version selects the instruction template (WS-3 will resolve it against
+# the ADR-197 prompt registry; today it labels the embedded default in
+# internal/agent/instructions.go).
 agent: companion_extractor
 sub_agents:
   extractor:
     tier: high
-    primary_model: gemini-2.5-pro
-    fallback_models: [gemini-2.5-flash]
+    primary_model: longcat-2.5-preview
+    fallback_models: [longcat-2.5-preview]
     prompt_version: v1

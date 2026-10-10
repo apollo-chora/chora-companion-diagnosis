@@ -16,9 +16,10 @@ func TestCompanionExtractor_HighMultimodalTier(t *testing.T) {
 	extractor, err := cfg.Sub("extractor")
 	require.NoError(t, err)
 	assert.Equal(t, "high", extractor.Tier)
-	// gemini-2.5-pro is the GA multimodal flagship the transcription step needs.
-	assert.Equal(t, "gemini-2.5-pro", extractor.PrimaryModel)
-	assert.Equal(t, []string{"gemini-2.5-flash"}, extractor.FallbackModels)
+	// longcat-2.5-preview is the platform's single text route (vision-capable),
+	// which is what the transcription step needs.
+	assert.Equal(t, "longcat-2.5-preview", extractor.PrimaryModel)
+	assert.Equal(t, []string{"longcat-2.5-preview"}, extractor.FallbackModels)
 	assert.Equal(t, "v1", extractor.PromptVersion)
 }
 
@@ -30,8 +31,8 @@ func TestCompanionDiagnoser_HighTier(t *testing.T) {
 	diagnoser, err := cfg.Sub("diagnoser")
 	require.NoError(t, err)
 	assert.Equal(t, "high", diagnoser.Tier)
-	assert.Equal(t, "gemini-2.5-pro", diagnoser.PrimaryModel)
-	assert.Equal(t, []string{"gemini-2.5-flash"}, diagnoser.FallbackModels)
+	assert.Equal(t, "longcat-2.5-preview", diagnoser.PrimaryModel)
+	assert.Equal(t, []string{"longcat-2.5-preview"}, diagnoser.FallbackModels)
 	assert.Equal(t, "v1", diagnoser.PromptVersion)
 }
 
