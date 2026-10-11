@@ -8,14 +8,18 @@
 # The diagnoser reasons over the extractor's PLAIN-TEXT output plus a fenced
 # UNTRUSTED LEARNER CLUES data block and emits a STRICT-JSON Growth-Edge map
 # matching the FROZEN analysis.py _JSON_CONTRACT. That reasoning + schema-
-# faithfulness wants the HIGH tier — primary gemini-2.5-pro, fallback
-# gemini-2.5-flash. prompt_version selects the instruction template (WS-3 will
-# resolve it against the ADR-197 prompt registry; today it labels the
-# embedded default in internal/agent/instructions.go).
+# faithfulness wants the HIGH tier — the deployment's only text route,
+# LongCat-2.5-Preview (registry entry `longcat-2.5-preview`, api.longcat.ai).
+# The fallback repeats the primary deliberately: there is one text provider to
+# degrade to, and the gateway de-duplicates an identical (vendor, model) pair,
+# so the chain collapses to a single target.
+# prompt_version selects the instruction template (WS-3 will resolve it against
+# the ADR-197 prompt registry; today it labels the embedded default in
+# internal/agent/instructions.go).
 agent: companion_diagnoser
 sub_agents:
   diagnoser:
     tier: high
-    primary_model: gemini-2.5-pro
-    fallback_models: [gemini-2.5-flash]
+    primary_model: longcat-2.5-preview
+    fallback_models: [longcat-2.5-preview]
     prompt_version: v1
