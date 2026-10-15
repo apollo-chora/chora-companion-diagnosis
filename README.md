@@ -46,7 +46,7 @@ The extractor expects dispatch session state containing `source_blob_uri` and `s
 
 The diagnoser reads `extracted_text` for the default `diagnose` task. It also accepts `study_aids`, which reads `edges_json`, and `practice_test`, which reads `edges_json` and optionally `max_questions`. An unknown `task_kind` is treated as a permanent failure. For practice tests, the actor and critic are followed by an on-edge gate, with at most one regeneration round.
 
-Model configuration is embedded in `internal/agentconfig`. Both agents use `gemini-2.5-pro` with `gemini-2.5-flash` as the fallback by default. `COMPANION_DIAGNOSER_MODEL` and `COMPANION_EXTRACTOR_MODEL` override the primary model. The remaining runtime settings are controlled through environment variables:
+Model configuration is env-only. `internal/agentconfig` declares each agent's tier and prompt version, but no model name: both the diagnoser and the extractor read their REQUIRED `COMPANION_DIAGNOSER_MODEL` / `COMPANION_EXTRACTOR_MODEL` env var as the gateway `logical_model_id`, and boot fails loud when either is unset. Each agent's fallback chain is the optional comma-separated `COMPANION_DIAGNOSER_FALLBACK_MODELS` / `COMPANION_EXTRACTOR_FALLBACK_MODELS`; unset declares no fallback. The remaining runtime settings are controlled through environment variables:
 
 | Variable | Purpose | Default |
 | --- | --- | --- |

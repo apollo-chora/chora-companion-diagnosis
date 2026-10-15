@@ -18,7 +18,8 @@
 //
 //	CHORA_PROJECT_ID                       project label for the boot log (default chora-local)
 //	CHORA_AGENT_APP_NAME                   session AppName label (optional)
-//	COMPANION_EXTRACTOR_MODEL              primary model override (default: embedded agentconfig YAML)
+//	COMPANION_EXTRACTOR_MODEL              required: the gateway logical_model_id (env-only, no default)
+//	COMPANION_EXTRACTOR_FALLBACK_MODELS    optional comma-separated fallback chain (empty = none)
 //	CHORA_GATEWAY_ENDPOINT                 default gateway.chora.site:443
 //	CHORA_GATEWAY_TENANT_ID / _GCID        required (ADR-163; per-request values from the dispatch win)
 //	CHORA_ENV                              dev | staging | prod
