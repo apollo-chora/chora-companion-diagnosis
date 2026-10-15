@@ -1,18 +1,16 @@
-# companion_diagnoser — per-sub-agent model + prompt config (ADR-205 WS-2).
+# companion_diagnoser — per-sub-agent tier + prompt config (ADR-205 WS-2).
 #
 # AGENT-DRIVEN tiering: this YAML is the single source of truth for the
-# diagnoser's model. The agent sends primary_model as the gateway's
-# logical_model_id and fallback_models as the agent-declared fallback chain
-# (InvokeRequest.fallback_logical_model_ids); the gateway HONOURS it.
+# diagnoser's TIER and PROMPT VERSION. The model id is env-only: the boot
+# layer reads the REQUIRED COMPANION_DIAGNOSER_MODEL env var and the optional
+# COMPANION_DIAGNOSER_FALLBACK_MODELS comma-separated chain (empty = no
+# fallback) and forwards both to the gateway (logical_model_id +
+# InvokeRequest.fallback_logical_model_ids); the gateway HONOURS the chain.
 #
 # The diagnoser reasons over the extractor's PLAIN-TEXT output plus a fenced
 # UNTRUSTED LEARNER CLUES data block and emits a STRICT-JSON Growth-Edge map
-# matching the FROZEN analysis.py _JSON_CONTRACT. That reasoning + schema-
-# faithfulness wants the HIGH tier — the deployment's only text route,
-# LongCat-2.5-Preview (registry entry `longcat-2.5-preview`, api.longcat.ai).
-# The fallback repeats the primary deliberately: there is one text provider to
-# degrade to, and the gateway de-duplicates an identical (vendor, model) pair,
-# so the chain collapses to a single target.
+# matching the FROZEN analysis.py _JSON_CONTRACT. That reasoning + schema
+# faithfulness wants the HIGH tier.
 # prompt_version selects the instruction template (WS-3 will resolve it against
 # the ADR-197 prompt registry; today it labels the embedded default in
 # internal/agent/instructions.go).
@@ -20,6 +18,4 @@ agent: companion_diagnoser
 sub_agents:
   diagnoser:
     tier: high
-    primary_model: longcat-2.5-preview
-    fallback_models: [longcat-2.5-preview]
     prompt_version: v1

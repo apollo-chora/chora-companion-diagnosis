@@ -1,19 +1,15 @@
-# companion_extractor — per-sub-agent model + prompt config (ADR-205 WS-2).
+# companion_extractor — per-sub-agent tier + prompt config (ADR-205 WS-2).
 #
 # AGENT-DRIVEN tiering: this YAML is the single source of truth for the
-# extractor's model. The agent sends primary_model as the gateway's
-# logical_model_id and fallback_models as the agent-declared fallback chain
-# (InvokeRequest.fallback_logical_model_ids); the gateway HONOURS it.
+# extractor's TIER and PROMPT VERSION. The model id is env-only: the boot
+# layer reads the REQUIRED COMPANION_EXTRACTOR_MODEL env var and the optional
+# COMPANION_EXTRACTOR_FALLBACK_MODELS comma-separated chain (empty = no
+# fallback) and forwards both to the gateway (logical_model_id +
+# InvokeRequest.fallback_logical_model_ids); the gateway HONOURS the chain.
 #
 # The extractor faithfully TRANSCRIBES / DESCRIBES an uploaded learning artifact
 # (a marked test, free-form notes, a hand-drawn scribble, or source material)
-# into plain text for the diagnoser. That demands a strong MULTIMODAL reader, and
-# the deployment's only text route — LongCat-2.5-Preview (registry entry
-# `longcat-2.5-preview`, api.longcat.ai) — is vision-capable, so it serves this
-# step too. The fallback repeats the primary deliberately: there is one text
-# provider to degrade to, and the gateway de-duplicates an identical
-# (vendor, model) pair, so the chain collapses to a single target. Give this
-# sub-agent a real second model the day the deployment has one.
+# into plain text for the diagnoser. That demands a strong MULTIMODAL reader.
 # prompt_version selects the instruction template (WS-3 will resolve it against
 # the ADR-197 prompt registry; today it labels the embedded default in
 # internal/agent/instructions.go).
@@ -21,6 +17,4 @@ agent: companion_extractor
 sub_agents:
   extractor:
     tier: high
-    primary_model: longcat-2.5-preview
-    fallback_models: [longcat-2.5-preview]
     prompt_version: v1
