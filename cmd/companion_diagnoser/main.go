@@ -50,4 +50,11 @@ func main() {
 	if err := boot.RunDiagnoser(ctx, os.Args[1:]); err != nil {
 		log.Fatalf("companion_diagnoser: %v", err)
 	}
+
+	// The pinned chora-adk-common returns after the subscriber is registered
+	// (its serveonly.go has no ctx.Done() block before the version this repo
+	// requires), which would make this process exit 0 and restart forever.
+	// Blocking on the signal context keeps the subscriber alive, and is a
+	// no-op once the dependency blocks on the same context itself.
+	<-ctx.Done()
 }
