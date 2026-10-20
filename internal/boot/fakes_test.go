@@ -76,8 +76,8 @@ func minimalBootEnv(t interface{ Setenv(string, string) }) {
 	t.Setenv("CHORA_PROJECT_ID", "chora-test")
 	t.Setenv("CHORA_GATEWAY_TENANT_ID", "11111111-1111-7111-8111-111111111111")
 	t.Setenv("CHORA_GATEWAY_GCID", "00000000-0000-7000-8000-000000001999")
-	t.Setenv("COMPANION_DIAGNOSER_MODEL", "")
-	t.Setenv("COMPANION_EXTRACTOR_MODEL", "")
+	t.Setenv("COMPANION_DIAGNOSER_MODEL", "test-diagnoser-model")
+	t.Setenv("COMPANION_EXTRACTOR_MODEL", "test-extractor-model")
 }
 
 // fakeCallbackContext adds the mutable-state + artifacts surface that

@@ -42,23 +42,53 @@ func TestLoadConfig_readsTheEmbeddedYAMLAndTheCompanionOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d.CrewKind != "companion_diagnoser" || d.Model != "gemini-2.5-pro" || len(d.FallbackModels) != 1 || d.PromptVersion != "v1" {
+	// The model id is env-only: the YAML declares no primary, and the env
+	// fallback chain is empty unless *_FALLBACK_MODELS is set.
+	if d.CrewKind != "companion_diagnoser" || d.Model != "test-diagnoser-model" || len(d.FallbackModels) != 0 || d.PromptVersion != "v1" {
 		t.Errorf("diagnoser config = %+v", d)
 	}
-	t.Setenv("COMPANION_EXTRACTOR_MODEL", "gemini-2.5-flash")
+	// stub-override-model is a SENTINEL, not a real route: the deployment's
+	// model comes entirely from env, so the override has to differ from the
+	// minimalBootEnv value to prove the override is what won.
+	t.Setenv("COMPANION_EXTRACTOR_MODEL", "stub-override-model")
 	e, err := LoadExtractorConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e.CrewKind != "companion_extractor" || e.Model != "gemini-2.5-flash" {
+	if e.CrewKind != "companion_extractor" || e.Model != "stub-override-model" || len(e.FallbackModels) != 0 {
 		t.Errorf("extractor override not honoured: %+v", e)
 	}
+	// The optional *_FALLBACK_MODELS comma list is the declared fallback chain,
+	// forwarded to the gateway as fallback_logical_model_ids.
+	t.Setenv("COMPANION_DIAGNOSER_FALLBACK_MODELS", "stub-fb-a, stub-fb-b")
+	d, err = LoadDiagnoserConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Model != "test-diagnoser-model" || len(d.FallbackModels) != 2 || d.FallbackModels[0] != "stub-fb-a" || d.FallbackModels[1] != "stub-fb-b" {
+		t.Errorf("diagnoser fallback chain = %+v", d.FallbackModels)
+	}
 	// The old WEAKNESS_* override names are DELETED (ADR-254 D9), not aliased.
-	t.Setenv("COMPANION_EXTRACTOR_MODEL", "")
-	t.Setenv("WEAKNESS_EXTRACTOR_MODEL", "gemini-ignored")
+	// stub-ignored-model is a SENTINEL too: were the dead name still read, the
+	// model below would be it rather than the env-provided one.
+	t.Setenv("COMPANION_EXTRACTOR_MODEL", "stub-env-model")
+	t.Setenv("WEAKNESS_EXTRACTOR_MODEL", "stub-ignored-model")
 	e, _ = LoadExtractorConfig()
-	if e.Model != "gemini-2.5-pro" {
+	if e.Model != "stub-env-model" {
 		t.Errorf("WEAKNESS_EXTRACTOR_MODEL must be dead, got model %q", e.Model)
+	}
+}
+
+func TestLoadConfig_modelEnvIsRequired(t *testing.T) {
+	minimalBootEnv(t)
+	t.Setenv("COMPANION_DIAGNOSER_MODEL", "")
+	if _, err := LoadDiagnoserConfig(); err == nil || !strings.Contains(err.Error(), "COMPANION_DIAGNOSER_MODEL") {
+		t.Errorf("diagnoser without its model env must fail naming the var: %v", err)
+	}
+	minimalBootEnv(t)
+	t.Setenv("COMPANION_EXTRACTOR_MODEL", "")
+	if _, err := LoadExtractorConfig(); err == nil || !strings.Contains(err.Error(), "COMPANION_EXTRACTOR_MODEL") {
+		t.Errorf("extractor without its model env must fail naming the var: %v", err)
 	}
 }
 
@@ -261,11 +291,11 @@ func TestDiagnoserConditions_carryTaskKind(t *testing.T) {
 func TestNewGatewayLLM_refusesAnIncompleteConfigAndNamesTheBinary(t *testing.T) {
 	// modelgatewayclient validates before minting a token, so no credentials
 	// are needed; the wrap must name the binary, model and endpoint.
-	_, err := NewGatewayLLM(context.Background(), Config{CrewKind: CrewKindExtractor, GatewayEndpoint: "gateway.chora.site:443", Model: "gemini-2.5-pro"})
+	_, err := NewGatewayLLM(context.Background(), Config{CrewKind: CrewKindExtractor, GatewayEndpoint: "gateway.chora.site:443", Model: "test-extractor-model"})
 	if err == nil {
 		t.Fatal("NewGatewayLLM built a client with no tenant and no GCID")
 	}
-	for _, want := range []string{"modelgatewayclient.New", CrewKindExtractor, "gemini-2.5-pro", "gateway.chora.site:443"} {
+	for _, want := range []string{"modelgatewayclient.New", CrewKindExtractor, "test-extractor-model", "gateway.chora.site:443"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q missing %q", err, want)
 		}

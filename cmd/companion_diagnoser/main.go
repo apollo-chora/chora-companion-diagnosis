@@ -19,7 +19,8 @@
 //
 //	CHORA_PROJECT_ID                       project label for the boot log (default chora-local)
 //	CHORA_AGENT_APP_NAME                   session AppName label (optional)
-//	COMPANION_DIAGNOSER_MODEL              primary model override (default: embedded agentconfig YAML)
+//	COMPANION_DIAGNOSER_MODEL              required: the gateway logical_model_id (env-only, no default)
+//	COMPANION_DIAGNOSER_FALLBACK_MODELS    optional comma-separated fallback chain (empty = none)
 //	CHORA_GATEWAY_ENDPOINT                 default gateway.chora.site:443
 //	CHORA_GATEWAY_TENANT_ID / _GCID        required (ADR-163; per-request values from the dispatch win)
 //	CHORA_ENV                              dev | staging | prod
@@ -49,4 +50,11 @@ func main() {
 	if err := boot.RunDiagnoser(ctx, os.Args[1:]); err != nil {
 		log.Fatalf("companion_diagnoser: %v", err)
 	}
+
+	// The pinned chora-adk-common returns after the subscriber is registered
+	// (its serveonly.go has no ctx.Done() block before the version this repo
+	// requires), which would make this process exit 0 and restart forever.
+	// Blocking on the signal context keeps the subscriber alive, and is a
+	// no-op once the dependency blocks on the same context itself.
+	<-ctx.Done()
 }
