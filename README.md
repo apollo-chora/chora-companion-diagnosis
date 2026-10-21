@@ -222,12 +222,20 @@ directions — a request from another container by service name, and requests to
 namespace — all refused the connection, while the log still reaches
 `agentdispatch.serving`.
 
-Be precise about what that is: a runtime observation, not a reading of this
-repository's code. The listener is implemented in the pinned `chora-adk-common`
-dependency (`agentdispatch.RunSubscriberOnly`), so the fault may live there rather
-than here. Either way, do not build a readiness gate on
-`curl http://…:8080/healthz` for these services until it answers; it will fail even
-when the agent is healthy.
+Be precise about what that is: a runtime observation, and the cause is the pinned
+framework version, not this repository's code:
+
+```text
+chora-adk-common v0.0.0-20261005110720-56af53fbecf8   ← this repo, no listener
+chora-adk-common v0.0.0-20261018001513-336709b355a0   ← chora-qgen, binds correctly
+```
+
+The listener lives in `agentdispatch.RunSubscriberOnly`, and the October 18
+pseudo-version fixed the bind. `chora-kg-explorer` and `chora-oe-grading` share the
+stale pin and fail the same way; `chora-qgen` answers on `8080` normally. Bumping
+the pin is the fix. Until then, do not build a readiness gate on
+`curl http://…:8080/healthz` for these services — it will fail even when the agent
+is healthy.
 
 ### What to check instead
 
